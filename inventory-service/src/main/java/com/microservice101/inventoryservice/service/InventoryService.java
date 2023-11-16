@@ -1,10 +1,17 @@
 package com.microservice101.inventoryservice.service;
 
 import com.microservice101.inventoryservice.dto.InventoryRequest;
+import com.microservice101.inventoryservice.dto.InventoryResponse;
 import com.microservice101.inventoryservice.model.Inventory;
 import com.microservice101.inventoryservice.repository.InventoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class InventoryService {
@@ -22,5 +29,19 @@ public class InventoryService {
     public boolean isStockAvailable(String skuCode) {
         Inventory inventory = inventoryRepository.findBySKUCode(skuCode).orElse(null);
         return inventory != null && inventory.getQuantity() > 0;
+    }
+
+    public List<InventoryResponse> isStockAvailableMulti(List<String> skuCodes) {
+        List<Inventory> inventories = inventoryRepository.findBySKUCodeIn(skuCodes).orElse(new ArrayList<>());
+
+        Map<String, Integer> skuCodeQuantityMap = inventories.stream()
+                .collect(Collectors.toMap(Inventory::getSKUCode, Inventory::getQuantity));
+
+        return skuCodes.stream()
+                .map(skuCode -> InventoryResponse.builder()
+                        .skuCode(skuCode)
+                        .inStock(skuCodeQuantityMap.containsKey(skuCode) && skuCodeQuantityMap.get(skuCode) > 0)
+                        .build())
+                .collect(Collectors.toList());
     }
 }

@@ -17,7 +17,11 @@ public class OrderController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> placeOrder(@RequestBody OrderRequest orderRequest) {
-        orderService.placeOrder(orderRequest);
-        return ResponseEntity.ok("Order placed successfully");
+        try {
+            orderService.placeOrder(orderRequest);
+            return ResponseEntity.ok("Order placed successfully");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.toString());
+        }
     }
 }
